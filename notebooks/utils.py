@@ -65,15 +65,14 @@ def zscore_predict(raw, features, scaler):
 
 
 
-def umap_fit(df_scaled, RANDOM_SEED):
+def umap_fit(df_scaled, hypers_umap):
     """
     Fits a umap transformer. Returns transformer.
     """
     
     # Instantiate and fit
     reducer = umap.UMAP(
-        random_state=np.random.RandomState(RANDOM_SEED), 
-        transform_seed=np.random.RandomState(RANDOM_SEED)
+        **hypers_umap
         ).fit(X=df_scaled)
     
     return(reducer)
@@ -215,7 +214,7 @@ def plot_clusters(embedding, plot_sample_size, cluster_member_colors, plot_title
 
 
 
-def clustering_wrapper(df, features, RANDOM_SEED, hypers_hdbscan, plot_sample_size, force_predict=True, include_noise=False, plot_title=None):
+def clustering_wrapper(df, features, hypers_umap, hypers_hdbscan, plot_sample_size, force_predict=True, include_noise=False, plot_title=None):
     """
     Does one round of umap + hdbscan.
     """
@@ -230,7 +229,7 @@ def clustering_wrapper(df, features, RANDOM_SEED, hypers_hdbscan, plot_sample_si
     df_scaled = zscore_predict(df, features, scaler)
 
     # Fit umap transformer
-    reducer = umap_fit(df_scaled, RANDOM_SEED)
+    reducer = umap_fit(df_scaled, hypers_umap)
 
     # Reduce
     embedding = umap_predict(reducer, df_scaled)
