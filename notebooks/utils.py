@@ -30,7 +30,7 @@ def summary_plotter(scores, features, color_palette, cluster_number):
     if cluster_number == -1:
         plt.barh(for_plotting['variable'], for_plotting['value'], color=(0.5,0.5,0.5))
     else:
-        plt.barh(for_plotting['variable'], for_plotting['value'], color=color_palette[cluster_number])
+        plt.barh(for_plotting['variable'], for_plotting['value'], color=color_palette[int(cluster_number)])
     
     plt.axvline(0, ymin=0, ymax=1, color='grey', linewidth=2)
     ax.invert_yaxis()
