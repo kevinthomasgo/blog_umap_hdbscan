@@ -7,6 +7,8 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import time
+<<<<<<< HEAD
+=======
 
 
 def summary_plotter(scores, features, color_palette, cluster_number):
@@ -37,6 +39,7 @@ def summary_plotter(scores, features, color_palette, cluster_number):
     plt.title("Cluster {}".format(cluster_number))
     
     
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
     
 def zscore_fit(raw, features):
     """
@@ -173,20 +176,34 @@ def reporting_metrics(scores, include_noise=False):
 
 
 
+<<<<<<< HEAD
+def color_setter(n_clusters, scores, variable, variable_score, palette_name='deep'):
+=======
 def color_setter(n_clusters, scores):
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
     """
     Sets color palette and color values per data point.
     """
     
+<<<<<<< HEAD
+    color_palette = sns.color_palette(palette_name, n_clusters)
+=======
     color_palette = sns.color_palette('deep', n_clusters)
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
 
     # Assign color based on index in color_palette (e.g., cluster 0 will be color_palette[0])
     # Else, assign as grey
     cluster_colors = [color_palette[x] if x >= 0
                       else (0.5, 0.5, 0.5) # Grey
+<<<<<<< HEAD
+                      for x in scores[variable]]
+    cluster_member_colors = [sns.desaturate(x, p) for x, p in
+                             zip(cluster_colors, scores[variable_score])]
+=======
                       for x in scores['cluster']]
     cluster_member_colors = [sns.desaturate(x, p) for x, p in
                              zip(cluster_colors, scores['score'])]
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
 
     return({
         "color_palette": color_palette,
@@ -196,7 +213,11 @@ def color_setter(n_clusters, scores):
 
 
 
+<<<<<<< HEAD
+def plot_clusters(embedding, plot_sample_size, cluster_member_colors, point_alpha, plot_title=None):
+=======
 def plot_clusters(embedding, plot_sample_size, cluster_member_colors, plot_title=None):
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
     """
     Plots hdbscan clusters with corresponding colors.
     """
@@ -209,12 +230,59 @@ def plot_clusters(embedding, plot_sample_size, cluster_member_colors, plot_title
     fig.set_dpi(120)
     fig.set_size_inches(10,7)
     plt.title(plot_title)
+<<<<<<< HEAD
+    plot = plt.scatter(for_plotting[0], for_plotting[1], alpha=point_alpha, c=[cluster_member_colors[i] for i in for_plotting.index])
+
+
+
+def summary_plotter(scores, features, variable, color_palette, cluster_number, aggregator='median', xlim_params=None, top_n=None):
+    """
+    Plot feature means for members in a cluster.
+    """
+    
+    # Get select cluster
+    for_plotting = scores[scores[variable]==cluster_number]
+    for_plotting = for_plotting[features] # Get only feature columns
+    if aggregator == 'median':
+        for_plotting = pd.DataFrame(for_plotting.median()) # Get average z-score of each member
+    else:
+        for_plotting = pd.DataFrame(for_plotting.mean()) # Get average z-score of each member
+    for_plotting.reset_index(inplace=True)
+    for_plotting.columns = ['variable', 'value']
+
+    # Get top n
+    if top_n is not None:
+        for_plotting.sort_values('value', ascending=False, inplace=True)
+        for_plotting = for_plotting.head(top_n)
+    
+    # Plot
+    fig, ax = plt.subplots()
+    fig.set_dpi(120)
+    fig.set_size_inches(10,7)
+    
+    if cluster_number == -1:
+        plt.barh(for_plotting['variable'], for_plotting['value'], color=(0.5,0.5,0.5))
+    else:
+        plt.barh(for_plotting['variable'], for_plotting['value'], color=color_palette[int(cluster_number)])
+    
+    plt.axvline(0, ymin=0, ymax=1, color='grey', linewidth=2)
+    if xlim_params is not None:
+        plt.xlim(**xlim_params)
+
+    ax.invert_yaxis()
+    plt.title("Cluster {}".format(cluster_number))
+
+
+
+def clustering_wrapper(df, features, hypers_umap, hypers_hdbscan, plot_sample_size, point_alpha, force_predict=True, include_noise=False, plot_title=None):
+=======
     plot = plt.scatter(for_plotting[0], for_plotting[1], alpha=0.25, c=[cluster_member_colors[i] for i in for_plotting.index])
 
 
 
 
 def clustering_wrapper(df, features, hypers_umap, hypers_hdbscan, plot_sample_size, force_predict=True, include_noise=False, plot_title=None):
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
     """
     Does one round of umap + hdbscan.
     """
@@ -238,9 +306,15 @@ def clustering_wrapper(df, features, hypers_umap, hypers_hdbscan, plot_sample_si
     clusterer = hdbscan_fit(embedding, hypers_hdbscan)
 
     # Predict
-    scores = hdbscan_predict(embedding, df_scaled, clusterer, force_predict)
-    scores.index = df.index
-    scores.reset_index(inplace=True)
+<<<<<<< HEAD
+    try:
+        scores = hdbscan_predict(embedding, df_scaled, clusterer, force_predict)
+        scores.index = df.index
+        scores.reset_index(inplace=True)
+    except KeyError: # Means no clusters detected
+        print("No clusters detected")
+        return(None)
+
 
     # Get reporting metrics
     metrics = reporting_metrics(scores, include_noise)
@@ -249,10 +323,126 @@ def clustering_wrapper(df, features, hypers_umap, hypers_hdbscan, plot_sample_si
     n_clusters = metrics['n_clusters']
 
     # Get colors
+    colors = color_setter(n_clusters, scores, 'cluster', 'score')
+
+    # Plot
+    plot_clusters(embedding, plot_sample_size, colors['cluster_member_colors'], point_alpha, plot_title)
+
+    # Runtime
+    runtime = time.time()-t0
+
+    # Compile
+    output = {
+        'scaler': scaler, # zscore
+        'reducer': reducer, # umap
+        'clusterer': clusterer, # hdbscan
+        'scores': scores,
+        'colors': colors,
+        'metrics': metrics,
+        'runtime': runtime
+    }
+
+    return(output)
+
+
+def top_n_extractor(x, top_n, only_positive=True):
+    """
+    Extract top n features (by value) for row x from a pivot table
+
+    """
+    top = x.sort_values(ascending=False)
+    if only_positive:
+        top = top[top>0]
+    return top[0:top_n].index.tolist()
+
+
+def summary_plotter_counts(scores, features, variable, color_palette, cluster_number, xlim_params=None, top_n=5, only_positive=True):
+    """
+    Count-based version of summary plotter. 
+    
+    """
+
+    # Get select cluster
+    for_plotting = scores[scores[variable]==cluster_number]
+    for_plotting = for_plotting[features] # Get only feature columns
+    
+    # Get all top n
+    out = for_plotting.apply(lambda x: top_n_extractor(x, top_n, only_positive), axis=1)
+    
+    # Get list of all top n
+    all_top =[]
+    for x in out:
+        all_top.extend(x)
+
+    # Get counts
+    all_top = pd.DataFrame({'n_customers': pd.Series(all_top).value_counts()}).head(top_n)
+    all_top['all_customers'] = for_plotting.shape[0]
+    all_top['proportion'] = all_top['n_customers']/all_top['all_customers']
+    all_top = all_top.sort_values('proportion')
+    
+    # Plot
+    fig, ax = plt.subplots()
+    fig.set_dpi(120)
+    fig.set_size_inches(10,7)
+
+    if cluster_number == -1:
+        plt.barh(all_top.index, all_top['proportion'], color=(0.5,0.5,0.5))
+    else:
+        plt.barh(all_top.index, all_top['proportion'], color=color_palette[int(cluster_number)])
+
+    plt.axvline(0, ymin=0, ymax=1, color='grey', linewidth=2)
+    if xlim_params is not None:
+        plt.xlim(**xlim_params)
+
+    plt.title("Cluster {}".format(cluster_number))
+
+
+def clustering_wrapper_predict(df, features, scaler, reducer, clusterer, plot_sample_size, point_alpha, force_predict=True, include_noise=False, plot_title=None):
+    """
+    Does one round of umap + hdbscan.
+    """
+
+    # Time
+    t0 = time.time()
+
+    # Transform
+    df_scaled = zscore_predict(df, features, scaler)
+
+    # Reduce
+    embedding = umap_predict(reducer, df_scaled)
+
+    # Predict
+    try:
+        scores = hdbscan_predict(embedding, df_scaled, clusterer, force_predict)
+        scores.index = df.index
+        scores.reset_index(inplace=True)
+    except KeyError: # Means no clusters detected
+        print("No clusters detected")
+        return(None)
+=======
+    scores = hdbscan_predict(embedding, df_scaled, clusterer, force_predict)
+    scores.index = df.index
+    scores.reset_index(inplace=True)
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
+
+    # Get reporting metrics
+    metrics = reporting_metrics(scores, include_noise)
+
+    # Define n_clusters
+    n_clusters = metrics['n_clusters']
+
+    # Get colors
+<<<<<<< HEAD
+    colors = color_setter(n_clusters, scores, 'cluster', 'score')
+
+    # Plot
+    plot_clusters(embedding, plot_sample_size, colors['cluster_member_colors'], point_alpha, plot_title)
+=======
     colors = color_setter(n_clusters, scores)
 
     # Plot
     plot_clusters(embedding, plot_sample_size, colors['cluster_member_colors'], plot_title)
+>>>>>>> 756445fb173b0ddd19c53c5f04e12cf1c8bd2fd2
 
     # Runtime
     runtime = time.time()-t0
